@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+# p02-frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+환경 공간데이터 통합 관리 및 시각화 플랫폼 - 프론트엔드
 
-## Available Scripts
+## 기술 스택
+- React
+- Leaflet.js (지도 렌더링)
+- react-dropzone (파일 업로드)
+- axios (REST API 통신)
 
-In the project directory, you can run:
+## 로컬 실행 방법
+```bash
+npm install
+npm start
+```
 
-### `npm start`
+## 브랜치 전략
+```
+main
+└── develop
+    ├── feature/map-view
+    ├── feature/file-upload
+    ├── feature/layer-control
+    ├── feature/filter-search
+    └── feature/progress-bar
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 브랜치 규칙
+| 브랜치 | 용도 |
+|--------|------|
+| `main` | 배포용 브랜치 (Vercel 자동 배포) |
+| `develop` | 개발 통합 브랜치 |
+| `feature/xxx` | 기능별 개발 브랜치 |
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 개발 흐름
 
-### `npm test`
+### 1. 최초 세팅 (처음 한 번만)
+```bash
+git clone https://github.com/km-jun/p02-frontend.git
+cd p02-frontend
+npm install
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. 작업 시작할 때마다
+```bash
+# develop 브랜치로 이동 후 최신 코드 pull
+git checkout develop
+git pull origin develop
 
-### `npm run build`
+# 기능 브랜치 생성
+git checkout -b feature/기능명
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 3. 작업 완료 후
+```bash
+# 변경사항 저장
+git add .
+git commit -m "feat: 기능 설명"
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# 원격 저장소에 push
+git push origin feature/기능명
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 4. Pull Request (PR) 생성
+1. GitHub에서 `p02-frontend` 저장소 접속
+2. **"Compare & pull request"** 버튼 클릭
+3. base: `develop` ← compare: `feature/기능명` 확인
+4. 제목과 설명 작성 후 **"Create pull request"** 클릭
+5. 코드 리뷰 후 **"Merge pull request"** 클릭
 
-### `npm run eject`
+### 5. Merge 후 로컬 정리
+```bash
+git checkout develop
+git pull origin develop
+git branch -d feature/기능명
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 배포
+https://example.com
