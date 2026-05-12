@@ -1,23 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react';
+import Sidebar from './components/Sidebar/Sidebar';
+import MapView from './components/Map/MapView';
 
 function App() {
+  const [layers, setLayers] = useState([]);
+
+  const addLayer = (newLayer) => {
+    setLayers(prev => [...prev, newLayer]);
+  };
+
+  const toggleLayer = (id) => {
+    setLayers(prev =>
+      prev.map(l => l.id === id ? { ...l, visible: !l.visible } : l)
+    );
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
+      <Sidebar layers={layers} onAddLayer={addLayer} />
+      <MapView layers={layers} onToggle={toggleLayer} />
     </div>
   );
 }
