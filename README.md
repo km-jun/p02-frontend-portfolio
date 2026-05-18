@@ -75,5 +75,48 @@ git pull origin develop
 git branch -d feature/기능명
 ```
 
+## 📋 현재 진행 상황 (2026.05.18)
+
+### ✅ 완료된 기능
+- [x] 기본 지도 렌더링 (Leaflet + OpenStreetMap)
+- [x] GeoJSON 파일 업로드
+- [x] CSV 파일 업로드
+- [x] **SHP(ZIP) 파일 업로드** ⭐
+- [x] 파일명 특수문자 자동 처리
+- [x] 레이어 목록 표시 및 토글
+- [x] 업로드 진행률 표시
+- [x] 백엔드 API 연동 완료
+- [x] Vercel 자동 배포
+
+### 🔧 백엔드 연동 정보
+**API 서버**: `http://127.0.0.1:8000`
+
+**주요 엔드포인트**:
+- `POST /upload` - 파일 업로드
+- `GET /layers/{category}/geojson` - 레이어 데이터 조회
+
+### ⚠️ 알려진 이슈
+**Vercel 배포에서 파일 업로드 불가**
+- **원인**: Mixed Content Error (HTTPS → HTTP 차단)
+- **해결**: 백엔드 HTTPS 설정 필요 (도메인 구매 후)
+- **현재**: localhost:3000에서는 정상 작동 ✅
+
+### 📅 다음 단계
+1. [ ] 도메인 구매 (학교 예산 신청 중)
+2. [ ] EC2 HTTPS 설정 (SSL 인증서)
+3. [ ] Vercel 완전 작동 확인
+4. [ ] 레이어 필터/검색 기능
+5. [ ] 속성 정보 팝업
+
+## 🚀 로컬 개발 (권장)
+현재는 localhost에서 테스트를 권장합니다:
+```bash
+npm start
+# 백엔드도 로컬 실행 시: Sidebar.jsx의 API_BASE를 localhost:8000으로 변경
+```
+
+## 🔗 관련 저장소
+- 백엔드: [km-jun/p02-backend](https://github.com/km-jun/p02-backend)
+
 ## 배포
 https://example.com
