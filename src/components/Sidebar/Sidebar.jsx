@@ -47,6 +47,11 @@ export default function Sidebar({ layers, onAddLayer }) {
         });
 
         setProgress(100);
+
+        setTimeout(() => {
+          setProgress(0);
+          setCurrentFile('');
+        }, 2000);
       } catch (error) {
         console.error('업로드 실패:', error);
         alert(`업로드 실패: ${error.response?.data?.detail || error.message}`);
