@@ -23,8 +23,14 @@ export default function Sidebar({ layers, onAddLayer }) {
         // FormData로 파일 전송
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('category', file.name.replace(/\.[^/.]+$/, ''));
 
+        // 파일명에서 특수문자 제거
+        const cleanName = file.name
+          .replace(/\.[^/.]+$/, '')  // 확장자 제거
+          .replace(/[^\w가-힣-]/g, '_');  // 특수문자 → _
+
+          formData.append('category', cleanName);
+          
         // 백엔드로 업로드
         const response = await axios.post(`${API_BASE}/upload`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
