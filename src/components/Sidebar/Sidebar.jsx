@@ -4,7 +4,7 @@ import DropZone from './DropZone';
 import ProgressBar from './ProgressBar';
 
 // 백엔드 API 주소
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = '/api';
 
 const COLORS = ['#9333ea', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
