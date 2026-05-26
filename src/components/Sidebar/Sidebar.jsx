@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
+import API_BASE from '../../config';
 import DropZone from './DropZone';
 import ProgressBar from './ProgressBar';
 
-const API_BASE = '/api';
 const COLORS = ['#9333ea', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
-export default function Sidebar({ layers, onAddLayer }) {
+export default function Sidebar({ layers, onAddLayer, availableLayers }) {
   const [progress, setProgress] = useState(0);
   const [currentFile, setCurrentFile] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -46,11 +46,18 @@ export default function Sidebar({ layers, onAddLayer }) {
 
         onAddLayer({
           id: Date.now(),
-          name: file.name.replace(/\.[^/.]+$/, ''),
+          name: category,
           data: geoResponse.data,
           color: COLORS[layers.length % COLORS.length],
           visible: true,
         });
+
+        // localStorage에 내가 업로드한 카테고리 저장
+        const myUploads = JSON.parse(localStorage.getItem('myUploads') || '[]');
+        if (!myUploads.includes(category)) {
+          myUploads.push(category);
+          localStorage.setItem('myUploads', JSON.stringify(myUploads));
+        }
 
         setProgress(100);
 
@@ -124,26 +131,8 @@ export default function Sidebar({ layers, onAddLayer }) {
     }}>
       <div>
         <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
-          업로드 목록
+          파일 업로드
         </h2>
-        <div style={{ marginBottom: 8 }}>
-          {layers.map(layer => (
-            <div key={layer.id} style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '6px 8px', borderRadius: 6, marginBottom: 2, background: '#f9fafb'
-            }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: layer.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {layer.name}
-              </span>
-            </div>
-          ))}
-          {layers.length === 0 && (
-            <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '8px 0' }}>
-              파일을 업로드해 주세요
-            </p>
-          )}
-        </div>
         <DropZone onDrop={handleDrop} disabled={uploading} />
         <ProgressBar fileName={currentFile} progress={progress} />
         {uploading && (
@@ -173,9 +162,9 @@ export default function Sidebar({ layers, onAddLayer }) {
             }}
           >
             <option value="">선택해주세요</option>
-            {layers.map(layer => (
-              <option key={layer.id} value={layer.name}>
-                {layer.name}
+            {availableLayers.map(layer => (
+              <option key={layer.category} value={layer.category}>
+                {layer.category}
               </option>
             ))}
           </select>
