@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import LayerPanel from './LayerPanel';
 
-export default function MapView({ layers, onToggle }) {
+export default function MapView({ layers, onToggle, onAddLayer }) {
   return (
     <div style={{ flex: 1, position: 'relative' }}>
       <MapContainer
@@ -24,7 +24,7 @@ export default function MapView({ layers, onToggle }) {
           )
         )}
       </MapContainer>
-      <LayerPanel layers={layers} onToggle={onToggle} />
+      <LayerPanel layers={layers} onToggle={onToggle} onAddLayer={onAddLayer} />
     </div>
   );
 }

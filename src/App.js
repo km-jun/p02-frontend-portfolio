@@ -1,12 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import API_BASE from './config';
 import Sidebar from './components/Sidebar/Sidebar';
 import MapView from './components/Map/MapView';
 
 function App() {
   const [layers, setLayers] = useState([]);
+  const [availableLayers, setAvailableLayers] = useState([]);
+
+  useEffect(() => {
+    const fetchLayers = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/layers`);
+        setAvailableLayers(response.data);
+      } catch (error) {
+        console.error('레이어 목록 가져오기 실패:', error);
+      }
+    };
+    fetchLayers();
+  }, []);
 
   const addLayer = (newLayer) => {
-    setLayers(prev => [...prev, newLayer]);
+    if (Array.isArray(newLayer)) {
+      setLayers(newLayer);
+    } else {
+      setLayers(prev => [...prev, newLayer]);
+      
+      if (!availableLayers.find(l => l.category === newLayer.name)) {
+        setAvailableLayers(prev => [...prev, { category: newLayer.name }]);
+      }
+    }
   };
 
   const toggleLayer = (id) => {
@@ -17,8 +40,8 @@ function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
-      <Sidebar layers={layers} onAddLayer={addLayer} />
-      <MapView layers={layers} onToggle={toggleLayer} />
+      <Sidebar layers={layers} onAddLayer={addLayer} availableLayers={availableLayers} />
+      <MapView layers={layers} onToggle={toggleLayer} onAddLayer={addLayer} />
     </div>
   );
 }
