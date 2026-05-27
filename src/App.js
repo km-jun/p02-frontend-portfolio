@@ -41,7 +41,7 @@ function App() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
       <Sidebar layers={layers} onAddLayer={addLayer} availableLayers={availableLayers} />
-      <MapView layers={layers} onToggle={toggleLayer} onAddLayer={addLayer} />
+      <MapView layers={layers} onToggle={toggleLayer} onAddLayer={addLayer} availableLayers={availableLayers} />
     </div>
   );
 }
