@@ -4,22 +4,9 @@ import API_BASE from '../../config';
 
 const COLORS = ['#9333ea', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
-export default function LayerPanel({ layers, onToggle, onAddLayer }) {
-  const [availableLayers, setAvailableLayers] = useState([]);
+export default function LayerPanel({ layers, onToggle, onAddLayer, availableLayers }) {
   const [selectedLayers, setSelectedLayers] = useState(new Set());
   const [loadingLayers, setLoadingLayers] = useState(false);
-
-  useEffect(() => {
-    const fetchLayers = async () => {
-      try {
-        const response = await axios.get(`${API_BASE}/layers`);
-        setAvailableLayers(response.data);
-      } catch (error) {
-        console.error('레이어 목록 가져오기 실패:', error);
-      }
-    };
-    fetchLayers();
-  }, []);
 
   useEffect(() => {
     const currentLayerNames = new Set(layers.map(l => l.name));
@@ -33,7 +20,6 @@ export default function LayerPanel({ layers, onToggle, onAddLayer }) {
       const newSelected = new Set(selectedLayers);
       newSelected.delete(category);
       setSelectedLayers(newSelected);
-      
       onAddLayer(layers.filter(l => l.id !== existingLayer.id));
     } else {
       const newSelected = new Set(selectedLayers);
@@ -62,12 +48,10 @@ export default function LayerPanel({ layers, onToggle, onAddLayer }) {
     }
   };
 
-  // 필터링: 내가 업로드한 것 + ORIGINAL만 보여주기
   const myUploads = JSON.parse(localStorage.getItem('myUploads') || '[]');
-  const filteredLayers = availableLayers.filter(layer => {
-    // 내가 업로드한 것 OR ORIGINAL 타입
-    return myUploads.includes(layer.category) || layer.file_type === 'ORIGINAL';
-  });
+  const filteredLayers = (availableLayers || []).filter(layer =>
+    myUploads.includes(layer.category) || layer.file_type === 'ORIGINAL'
+  );
 
   const uploadedLayers = filteredLayers.filter(l => myUploads.includes(l.category));
   const existingLayers = filteredLayers.filter(l => !myUploads.includes(l.category));
@@ -82,7 +66,7 @@ export default function LayerPanel({ layers, onToggle, onAddLayer }) {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, margin: '0 0 10px' }}>
+      <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 10px' }}>
         레이어 목록
       </p>
       
@@ -121,11 +105,7 @@ export default function LayerPanel({ layers, onToggle, onAddLayer }) {
             ))}
 
             {uploadedLayers.length > 0 && existingLayers.length > 0 && (
-              <div style={{ 
-                height: 1, 
-                background: '#d1d5db', 
-                margin: '8px 0' 
-              }} />
+              <div style={{ height: 1, background: '#d1d5db', margin: '8px 0' }} />
             )}
 
             {existingLayers.map((layer) => (
@@ -155,7 +135,7 @@ export default function LayerPanel({ layers, onToggle, onAddLayer }) {
       </div>
 
       {loadingLayers && (
-        <p style={{ fontSize: 11, color: '#6b7280', textAlign: 'center', marginTop: 8, margin: '8px 0 0' }}>
+        <p style={{ fontSize: 11, color: '#6b7280', textAlign: 'center', margin: '8px 0 0' }}>
           레이어 로딩 중...
         </p>
       )}

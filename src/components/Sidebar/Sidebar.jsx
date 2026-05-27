@@ -6,6 +6,27 @@ import ProgressBar from './ProgressBar';
 
 const COLORS = ['#9333ea', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
+const STEP_LABELS = {
+  PENDING: '대기 중',
+  PROCESSING: '처리 중',
+  COMPLETED: '완료',
+  FAILED: '실패',
+};
+
+const STEP_PROGRESS = {
+  PENDING: 10,
+  PROCESSING: 60,
+  COMPLETED: 100,
+  FAILED: 0,
+};
+
+const STEP_COLOR = {
+  PENDING: '#f59e0b',
+  PROCESSING: '#9333ea',
+  COMPLETED: '#10b981',
+  FAILED: '#ef4444',
+};
+
 export default function Sidebar({ layers, onAddLayer, availableLayers }) {
   const [progress, setProgress] = useState(0);
   const [currentFile, setCurrentFile] = useState('');
@@ -52,7 +73,6 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
           visible: true,
         });
 
-        // localStorage에 내가 업로드한 카테고리 저장
         const myUploads = JSON.parse(localStorage.getItem('myUploads') || '[]');
         if (!myUploads.includes(category)) {
           myUploads.push(category);
@@ -82,7 +102,7 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
     }
 
     setDownloading(true);
-    setDownloadTask(null);
+    setDownloadTask({ status: 'PENDING', progress: 0 });
 
     try {
       const response = await axios.post(`${API_BASE}/spatial/query`, {
@@ -105,7 +125,6 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
             setDownloading(false);
           } else if (task.status === 'FAILED') {
             setDownloading(false);
-            alert('다운로드 작업 실패');
           } else {
             setTimeout(checkStatus, 2000);
           }
@@ -120,8 +139,13 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
       console.error('다운로드 요청 실패:', error);
       alert(`다운로드 요청 실패: ${error.response?.data?.detail || error.message}`);
       setDownloading(false);
+      setDownloadTask(null);
     }
   };
+
+  const currentProgress = downloadTask ? STEP_PROGRESS[downloadTask.status] : 0;
+  const currentColor = downloadTask ? STEP_COLOR[downloadTask.status] : '#9333ea';
+  const currentLabel = downloadTask ? STEP_LABELS[downloadTask.status] : '';
 
   return (
     <div style={{
@@ -229,35 +253,64 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
         </button>
 
         {downloadTask && (
-          <div style={{
-            marginTop: 12, padding: 12, background: '#f9fafb',
-            borderRadius: 6, border: '1px solid #e5e7eb'
-          }}>
-            <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>
-              상태: <span style={{ fontWeight: 600, color: '#374151' }}>
-                {downloadTask.status === 'PENDING' && '대기 중'}
-                {downloadTask.status === 'PROCESSING' && '처리 중'}
-                {downloadTask.status === 'COMPLETED' && '완료'}
-                {downloadTask.status === 'FAILED' && '실패'}
-              </span>
+          <div style={{ marginTop: 12 }}>
+            {/* 단계 표시 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              {['PENDING', 'PROCESSING', 'COMPLETED'].map((step) => (
+                <span key={step} style={{
+                  fontSize: 10, fontWeight: 500,
+                  color: downloadTask.status === step ? currentColor : '#d1d5db'
+                }}>
+                  {STEP_LABELS[step]}
+                </span>
+              ))}
             </div>
-            {downloadTask.progress > 0 && (
-              <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>
-                진행률: {downloadTask.progress}%
-              </div>
-            )}
+
+            {/* 진행 바 */}
+            <div style={{
+              width: '100%', height: 6,
+              background: '#f3f4f6', borderRadius: 999, overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${currentProgress}%`,
+                background: currentColor,
+                borderRadius: 999,
+                transition: 'width 0.5s ease, background 0.3s ease'
+              }} />
+            </div>
+
+            {/* 퍼센트 + 상태 */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              marginTop: 4, fontSize: 11, color: '#6b7280'
+            }}>
+              <span style={{ color: currentColor, fontWeight: 600 }}>
+                {currentLabel}
+              </span>
+              <span>{currentProgress}%</span>
+            </div>
+
+            {/* 다운로드 버튼 */}
             {downloadTask.status === 'COMPLETED' && downloadTask.download_url && (
               <a
                 href={downloadTask.download_url}
                 download
                 style={{
-                  display: 'block', padding: '6px 8px', fontSize: 11,
+                  display: 'block', marginTop: 10, padding: '6px 8px', fontSize: 11,
                   background: '#10b981', color: '#fff', textAlign: 'center',
                   borderRadius: 6, textDecoration: 'none', fontWeight: 600
                 }}
               >
                 파일 다운로드
               </a>
+            )}
+
+            {/* 실패 메시지 */}
+            {downloadTask.status === 'FAILED' && (
+              <p style={{ fontSize: 11, color: '#ef4444', marginTop: 6, textAlign: 'center' }}>
+                다운로드 실패. 다시 시도해주세요.
+              </p>
             )}
           </div>
         )}
