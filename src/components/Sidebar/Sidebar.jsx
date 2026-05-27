@@ -27,7 +27,7 @@ const STEP_COLOR = {
   FAILED: '#ef4444',
 };
 
-export default function Sidebar({ layers, onAddLayer, availableLayers }) {
+export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
   const [progress, setProgress] = useState(0);
   const [currentFile, setCurrentFile] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -50,7 +50,8 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
 
         const cleanName = file.name
           .replace(/\.[^/.]+$/, '')
-          .replace(/[^\w가-힣-]/g, '_');
+          .replace(/[^\w가-힣-]/g, '_')
+          .slice(0, 50);  // ← 50자로 자르기
 
         formData.append('category', cleanName);
         
@@ -108,7 +109,8 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
       const response = await axios.post(`${API_BASE}/spatial/query`, {
         category: selectedCategory,
         target_format: selectedFormat,
-        region_name: regionName || null
+        region_name: regionName || null,
+        bbox: bbox || null
       });
 
       const taskId = response.data.task_id;
@@ -236,7 +238,11 @@ export default function Sidebar({ layers, onAddLayer, availableLayers }) {
             }}
           />
         </div>
-
+        {bbox && (
+          <p style={{ fontSize: 11, color: '#10b981', marginBottom: 8 }}>
+            ✅ 영역 선택됨
+          </p>
+        )}
         <button
           onClick={handleDownloadRequest}
           disabled={downloading || !selectedCategory}
