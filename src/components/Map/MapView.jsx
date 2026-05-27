@@ -1,8 +1,10 @@
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
 import LayerPanel from './LayerPanel';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect } from 'react';
+import 'leaflet-draw';
 
 // 기본 마커 아이콘 fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -12,7 +14,57 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-export default function MapView({ layers, onToggle, onAddLayer, availableLayers }) {  return (
+function DrawControl({ onBboxChange }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new L.Control.Draw({
+      position: 'topleft',
+      draw: {
+        rectangle: true,
+        polygon: false,
+        circle: false,
+        marker: false,
+        polyline: false,
+        circlemarker: false,
+      },
+      edit: {
+        featureGroup: drawnItems,
+        remove: true,
+      }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, (e) => {
+      drawnItems.clearLayers();
+      drawnItems.addLayer(e.layer);
+      const bounds = e.layer.getBounds();
+      onBboxChange([
+        bounds.getWest(),
+        bounds.getSouth(),
+        bounds.getEast(),
+        bounds.getNorth()
+      ]);
+    });
+
+    map.on(L.Draw.Event.DELETED, () => {
+      onBboxChange(null);
+    });
+
+    return () => {
+      map.removeControl(drawControl);
+      map.removeLayer(drawnItems);
+    };
+  }, [map, onBboxChange]);
+
+  return null;
+}
+
+export default function MapView({ layers, onToggle, onAddLayer, availableLayers, onBboxChange }) {
+  return (
     <div style={{ flex: 1, position: 'relative' }}>
       <MapContainer
         center={[37.54, 127.22]}
@@ -23,6 +75,7 @@ export default function MapView({ layers, onToggle, onAddLayer, availableLayers 
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="© OpenStreetMap"
         />
+        <DrawControl onBboxChange={onBboxChange} />
         {layers.map(layer =>
           layer.visible && (
             <GeoJSON

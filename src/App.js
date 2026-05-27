@@ -7,6 +7,7 @@ import MapView from './components/Map/MapView';
 function App() {
   const [layers, setLayers] = useState([]);
   const [availableLayers, setAvailableLayers] = useState([]);
+  const [bbox, setBbox] = useState(null);
 
   useEffect(() => {
     const fetchLayers = async () => {
@@ -40,8 +41,8 @@ function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
-      <Sidebar layers={layers} onAddLayer={addLayer} availableLayers={availableLayers} />
-      <MapView layers={layers} onToggle={toggleLayer} onAddLayer={addLayer} availableLayers={availableLayers} />
+      <Sidebar layers={layers} onAddLayer={addLayer} availableLayers={availableLayers} bbox={bbox} />
+      <MapView layers={layers} onToggle={toggleLayer} onAddLayer={addLayer} availableLayers={availableLayers} onBboxChange={setBbox} />
     </div>
   );
 }
