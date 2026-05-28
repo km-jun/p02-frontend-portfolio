@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import LayerPanel from './LayerPanel';
 import L from 'leaflet';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import 'leaflet-draw';
 
 // 기본 마커 아이콘 fix
@@ -63,7 +63,40 @@ function DrawControl({ onBboxChange }) {
   return null;
 }
 
+function MapBoundsTracker({ onBoundsChange }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const updateBounds = () => {
+      const bounds = map.getBounds();
+      onBoundsChange({
+        minLng: bounds.getWest(),
+        minLat: bounds.getSouth(),
+        maxLng: bounds.getEast(),
+        maxLat: bounds.getNorth()
+      });
+    };
+
+    updateBounds();
+    map.on('moveend', updateBounds);
+    map.on('zoomend', updateBounds);
+
+    return () => {
+      map.off('moveend', updateBounds);
+      map.off('zoomend', updateBounds);
+    };
+  }, [map, onBoundsChange]);
+
+  return null;
+}
+
 export default function MapView({ layers, onToggle, onAddLayer, availableLayers, onBboxChange }) {
+  const [mapBounds, setMapBounds] = useState(null);
+
+  const handleBoundsChange = useCallback((bounds) => {
+    setMapBounds(bounds);
+  }, []);
+
   return (
     <div style={{ flex: 1, position: 'relative' }}>
       <MapContainer
@@ -76,10 +109,11 @@ export default function MapView({ layers, onToggle, onAddLayer, availableLayers,
           attribution="© OpenStreetMap"
         />
         <DrawControl onBboxChange={onBboxChange} />
+        <MapBoundsTracker onBoundsChange={handleBoundsChange} />
         {layers.map(layer =>
           layer.visible && (
             <GeoJSON
-              key={`${layer.id}-${layer.visible}`}
+              key={`${layer.id}-${layer.visible}-${JSON.stringify(layer.data?.features?.length)}`}
               data={layer.data}
               style={{ color: layer.color, weight: 2 }}
               onEachFeature={(feature, leafletlayer) => {
@@ -97,7 +131,13 @@ export default function MapView({ layers, onToggle, onAddLayer, availableLayers,
           )
         )}
       </MapContainer>
-      <LayerPanel layers={layers} onToggle={onToggle} onAddLayer={onAddLayer} availableLayers={availableLayers} />
+      <LayerPanel
+        layers={layers}
+        onToggle={onToggle}
+        onAddLayer={onAddLayer}
+        availableLayers={availableLayers}
+        mapBounds={mapBounds}
+      />
     </div>
   );
 }
