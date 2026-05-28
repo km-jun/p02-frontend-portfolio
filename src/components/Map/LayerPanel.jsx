@@ -47,6 +47,7 @@ export default function LayerPanel({ layers, onToggle, onAddLayer, availableLaye
     }, 500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapBounds]);
 
   const handleLayerToggle = async (category) => {
