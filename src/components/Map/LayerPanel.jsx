@@ -4,7 +4,7 @@ import API_BASE from '../../config';
 
 const COLORS = ['#9333ea', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
-export default function LayerPanel({ layers, onToggle, onAddLayer, availableLayers }) {
+export default function LayerPanel({ layers, onToggle, onAddLayer, availableLayers, mapBounds }) {
   const [selectedLayers, setSelectedLayers] = useState(new Set());
   const [loadingLayers, setLoadingLayers] = useState(false);
 
@@ -12,6 +12,42 @@ export default function LayerPanel({ layers, onToggle, onAddLayer, availableLaye
     const currentLayerNames = new Set(layers.map(l => l.name));
     setSelectedLayers(currentLayerNames);
   }, [layers]);
+
+  // 지도 이동 시 선택된 레이어 데이터 업데이트
+  useEffect(() => {
+    if (!mapBounds || selectedLayers.size === 0) return;
+    
+    const timer = setTimeout(async () => {
+      const updateLayers = async () => {
+        for (const category of selectedLayers) {
+          try {
+            const response = await axios.post(`${API_BASE}/spatial/search`, {
+              category,
+              minLng: mapBounds.minLng,
+              minLat: mapBounds.minLat,
+              maxLng: mapBounds.maxLng,
+              maxLat: mapBounds.maxLat,
+              limit: 1000
+            });
+
+            const existingLayer = layers.find(l => l.name === category);
+            if (existingLayer) {
+              onAddLayer([
+                ...layers.filter(l => l.name !== category),
+                { ...existingLayer, data: response.data }
+              ]);
+            }
+          } catch (error) {
+            console.error(`${category} 레이어 업데이트 실패:`, error);
+          }
+        }
+      };
+
+      updateLayers();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [mapBounds]);
 
   const handleLayerToggle = async (category) => {
     const existingLayer = layers.find(l => l.name === category);
@@ -28,12 +64,27 @@ export default function LayerPanel({ layers, onToggle, onAddLayer, availableLaye
       setLoadingLayers(true);
       
       try {
-        const geoResponse = await axios.get(`${API_BASE}/layers/${category}/geojson`);
-        
+        // mapBounds가 있으면 화면 영역만, 없으면 전체
+        let geoData;
+        if (mapBounds) {
+          const response = await axios.post(`${API_BASE}/spatial/search`, {
+            category,
+            minLng: mapBounds.minLng,
+            minLat: mapBounds.minLat,
+            maxLng: mapBounds.maxLng,
+            maxLat: mapBounds.maxLat,
+            limit: 1000
+          });
+          geoData = response.data;
+        } else {
+          const response = await axios.get(`${API_BASE}/layers/${category}/geojson`);
+          geoData = response.data;
+        }
+
         onAddLayer({
           id: Date.now(),
           name: category,
-          data: geoResponse.data,
+          data: geoData,
           color: COLORS[layers.length % COLORS.length],
           visible: true,
         });
