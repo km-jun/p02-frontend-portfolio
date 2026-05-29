@@ -51,10 +51,12 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
         const cleanName = file.name
           .replace(/\.[^/.]+$/, '')
           .replace(/[^\w가-힣-]/g, '_')
-          .slice(0, 50);  // ← 50자로 자르기
+          .slice(0, 50);
 
         formData.append('category', cleanName);
-        
+
+        const isTif = file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff');
+
         const response = await axios.post(`${API_BASE}/upload`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (e) => {
@@ -64,15 +66,27 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
         });
 
         const category = response.data.category;
-        const geoResponse = await axios.get(`${API_BASE}/layers/${category}/geojson`);
 
-        onAddLayer({
-          id: Date.now(),
-          name: category,
-          data: geoResponse.data,
-          color: COLORS[layers.length % COLORS.length],
-          visible: true,
-        });
+        if (isTif) {
+          onAddLayer({
+            id: Date.now(),
+            name: category,
+            data: null,
+            format: 'TIF',
+            color: COLORS[layers.length % COLORS.length],
+            visible: true,
+          });
+          alert(`${category} (TIF) 업로드 성공!\n(이미지 데이터는 백엔드에 안전하게 저장되었습니다.)`);
+        } else {
+          const geoResponse = await axios.get(`${API_BASE}/layers/${category}/geojson`);
+          onAddLayer({
+            id: Date.now(),
+            name: category,
+            data: geoResponse.data,
+            color: COLORS[layers.length % COLORS.length],
+            visible: true,
+          });
+        }
 
         const myUploads = JSON.parse(localStorage.getItem('myUploads') || '[]');
         if (!myUploads.includes(category)) {
@@ -102,6 +116,11 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
       return;
     }
 
+    if (selectedFormat === 'TIF' && !bbox) {
+      alert('TIF 파일 다운로드는 지도에서 마우스로 영역(BBox)을 지정해야 합니다.');
+      return;
+    }
+
     setDownloading(true);
     setDownloadTask({ status: 'PENDING', progress: 0 });
 
@@ -120,12 +139,10 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
         try {
           const statusResponse = await axios.get(`${API_BASE}/spatial/task/${taskId}`);
           const task = statusResponse.data;
-          
+
           setDownloadTask(task);
 
-          if (task.status === 'COMPLETED') {
-            setDownloading(false);
-          } else if (task.status === 'FAILED') {
+          if (task.status === 'COMPLETED' || task.status === 'FAILED') {
             setDownloading(false);
           } else {
             setTimeout(checkStatus, 2000);
@@ -148,6 +165,8 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
   const currentProgress = downloadTask ? STEP_PROGRESS[downloadTask.status] : 0;
   const currentColor = downloadTask ? STEP_COLOR[downloadTask.status] : '#9333ea';
   const currentLabel = downloadTask ? STEP_LABELS[downloadTask.status] : '';
+
+  const isDownloadDisabled = downloading || !selectedCategory || (selectedFormat === 'TIF' && !bbox);
 
   return (
     <div style={{
@@ -179,7 +198,15 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
           </label>
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => {
+              const newCategory = e.target.value;
+              setSelectedCategory(newCategory);
+
+              const RASTER_CATEGORIES = ['연간 지하수 재충전', '지표수 유기오염', '지하수 질산성질소', '해수침투 지수'];
+              if (selectedFormat === 'TIF' && !RASTER_CATEGORIES.includes(newCategory)) {
+                setSelectedFormat('GEOJSON');
+              }
+            }}
             disabled={downloading}
             style={{
               width: '100%', padding: '6px 8px', fontSize: 12,
@@ -200,24 +227,34 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
           <label style={{ fontSize: 11, color: '#6b7280', display: 'block', marginBottom: 4 }}>
             파일 형식
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            {['GEOJSON', 'CSV', 'EXCEL', 'SHP'].map(format => (
-              <button
-                key={format}
-                onClick={() => setSelectedFormat(format)}
-                disabled={downloading}
-                style={{
-                  padding: '6px 8px', fontSize: 11, fontWeight: 500,
-                  border: '1px solid #d1d5db', borderRadius: 6,
-                  background: selectedFormat === format ? '#9333ea' : '#fff',
-                  color: selectedFormat === format ? '#fff' : '#374151',
-                  cursor: downloading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {format}
-              </button>
-            ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            {['GEOJSON', 'CSV', 'EXCEL', 'SHP', 'TIF'].map(format => {
+              const RASTER_CATEGORIES = [
+                '연간 지하수 재충전', '지표수 유기오염', '지하수 질산성질소', '해수침투 지수'
+              ];
+
+              const isFormatDisabled = downloading ||
+                (format === 'TIF' && selectedCategory && !RASTER_CATEGORIES.includes(selectedCategory));
+
+              return (
+                <button
+                  key={format}
+                  onClick={() => setSelectedFormat(format)}
+                  disabled={isFormatDisabled}
+                  style={{
+                    padding: '6px 2px', fontSize: 11, fontWeight: 500,
+                    border: '1px solid #d1d5db', borderRadius: 6,
+                    background: selectedFormat === format ? '#9333ea' : '#fff',
+                    color: selectedFormat === format ? '#fff' : '#374151',
+                    cursor: isFormatDisabled ? 'not-allowed' : 'pointer',
+                    opacity: isFormatDisabled ? 0.4 : 1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {format}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -238,20 +275,28 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
             }}
           />
         </div>
-        {bbox && (
-          <p style={{ fontSize: 11, color: '#10b981', marginBottom: 8 }}>
-            ✅ 영역 선택됨
+
+        {bbox ? (
+          <p style={{ fontSize: 11, color: '#10b981', marginBottom: 8, fontWeight: 600 }}>
+            ✅ 다운로드 영역 선택됨
           </p>
+        ) : (
+          selectedFormat === 'TIF' && (
+            <p style={{ fontSize: 11, color: '#ef4444', marginBottom: 8, fontWeight: 600 }}>
+              🚨 TIF는 지도에서 영역(BBox) 선택이 필수입니다.
+            </p>
+          )
         )}
+
         <button
           onClick={handleDownloadRequest}
-          disabled={downloading || !selectedCategory}
+          disabled={isDownloadDisabled}
           style={{
             width: '100%', padding: '8px 12px', fontSize: 12, fontWeight: 600,
             border: 'none', borderRadius: 6,
-            background: downloading || !selectedCategory ? '#d1d5db' : '#9333ea',
+            background: isDownloadDisabled ? '#d1d5db' : '#9333ea',
             color: '#fff',
-            cursor: downloading || !selectedCategory ? 'not-allowed' : 'pointer',
+            cursor: isDownloadDisabled ? 'not-allowed' : 'pointer',
             transition: 'all 0.2s'
           }}
         >
@@ -260,7 +305,6 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
 
         {downloadTask && (
           <div style={{ marginTop: 12 }}>
-            {/* 단계 표시 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               {['PENDING', 'PROCESSING', 'COMPLETED'].map((step) => (
                 <span key={step} style={{
@@ -272,32 +316,25 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
               ))}
             </div>
 
-            {/* 진행 바 */}
             <div style={{
               width: '100%', height: 6,
               background: '#f3f4f6', borderRadius: 999, overflow: 'hidden'
             }}>
               <div style={{
-                height: '100%',
-                width: `${currentProgress}%`,
-                background: currentColor,
-                borderRadius: 999,
+                height: '100%', width: `${currentProgress}%`,
+                background: currentColor, borderRadius: 999,
                 transition: 'width 0.5s ease, background 0.3s ease'
               }} />
             </div>
 
-            {/* 퍼센트 + 상태 */}
             <div style={{
               display: 'flex', justifyContent: 'space-between',
               marginTop: 4, fontSize: 11, color: '#6b7280'
             }}>
-              <span style={{ color: currentColor, fontWeight: 600 }}>
-                {currentLabel}
-              </span>
+              <span style={{ color: currentColor, fontWeight: 600 }}>{currentLabel}</span>
               <span>{currentProgress}%</span>
             </div>
 
-            {/* 다운로드 버튼 */}
             {downloadTask.status === 'COMPLETED' && downloadTask.download_url && (
               <a
                 href={downloadTask.download_url}
@@ -312,7 +349,6 @@ export default function Sidebar({ layers, onAddLayer, availableLayers, bbox }) {
               </a>
             )}
 
-            {/* 실패 메시지 */}
             {downloadTask.status === 'FAILED' && (
               <p style={{ fontSize: 11, color: '#ef4444', marginTop: 6, textAlign: 'center' }}>
                 다운로드 실패. 다시 시도해주세요.
