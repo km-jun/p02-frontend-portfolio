@@ -75,17 +75,15 @@ git pull origin develop
 git branch -d feature/기능명
 ```
 
-## 📋 현재 진행 상황 (2026.05.18)
+## 📋 현재 진행 상황 (2026.05.30)
 
 ### ✅ 완료된 기능
 - [x] 기본 지도 렌더링 (Leaflet + OpenStreetMap)
-- [x] GeoJSON 파일 업로드
-- [x] CSV 파일 업로드
-- [x] **SHP(ZIP) 파일 업로드** ⭐
-- [x] 파일명 특수문자 자동 처리
-- [x] 레이어 목록 표시 및 토글
-- [x] 업로드 진행률 표시
-- [x] 백엔드 API 연동 완료
+- [x] GeoJSON, CSV, SHP(ZIP) 파일 업로드 및 특수문자 처리
+- [x] 업로드 진행률 표시 및 백엔드 API 연동
+- [x] 대용량 벡터 데이터 렌더링 최적화 (Canvas 엔진 적용)
+- [x] TIF 래스터 파일 동적 히트맵 시각화 (hsla 투명도 적용)
+- [x] 레이어 렌더링 완료 상태를 감지하는 로딩 UI 연동
 - [x] Vercel 자동 배포
 
 ### 🔧 백엔드 연동 정보
@@ -93,7 +91,9 @@ git branch -d feature/기능명
 
 **주요 엔드포인트**:
 - `POST /upload` - 파일 업로드
-- `GET /layers/{category}/geojson` - 레이어 데이터 조회
+- `GET /layers` - 레이어 목록 조회 (속도 최적화 완료)
+- `GET /layers/{category}/geojson` - 벡터 레이어 데이터 조회
+- `GET /layers/{category}/raster` - TIF 래스터 이미지 S3 다운로드 URL 반환
 
 ### ⚠️ 알려진 이슈
 **Vercel 배포에서 파일 업로드 불가**

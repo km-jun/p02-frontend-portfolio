@@ -6,7 +6,8 @@ export default function DropZone({ onDrop }) {
     accept: { 
       'application/json': ['.geojson'], 
       'text/csv': ['.csv'],
-      'application/zip': ['.zip']  // ZIP 추가
+      'application/zip': ['.zip'],
+      'image/tiff': ['.tif', '.tiff']
     }
   });
 
@@ -25,7 +26,7 @@ export default function DropZone({ onDrop }) {
       <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>
         {isDragActive ? '여기에 놓으세요!' : '여기에 드래그 해 주세요'}
       </p>
-      <small style={{ color: '#9ca3af' }}>GeoJSON, CSV, SHP(ZIP) 지원</small>
+      <small style={{ color: '#9ca3af' }}>GeoJSON, CSV, SHP(ZIP), TIF 지원</small>
     </div>
   );
 }
