@@ -1,185 +1,101 @@
-# 환경 공간데이터 관리·시각화 플랫폼 — 프론트엔드
+# 환경 공간데이터 관리·시각화 플랫폼
 
-학교 캡스톤 팀 프로젝트의 개인 포트폴리오용 사본입니다. 원본 팀 저장소와 별도로 관리하며, 프로젝트 전체를 개인의 단독 구현으로 주장하지 않습니다.
+환경 공간데이터를 업로드하고 지도에서 조회하며, 필요한 영역과 파일 형식을 선택해 다운로드하는 웹 플랫폼입니다. 이 저장소는 학교 캡스톤 팀 프로젝트의 **React·Leaflet 기반 프론트엔드**를 소개합니다.
 
-- **프로젝트 기간:** 2026.03~2026.05
-- **공개용 정리:** 2026년 10월. 기존 커밋 작성자 이름·날짜·메시지와 브랜치 병합 이력을 보존했습니다.
-- **백엔드 코드:** [p02-backend-portfolio](https://github.com/km-jun/p02-backend-portfolio)
-- **운영 상태:** 기존 AWS 환경은 무료 플랜 종료로 접근할 수 없어 현재 작동하는 통합 데모를 제공하지 않습니다.
+[백엔드 저장소](https://github.com/km-jun/p02-backend-portfolio) · [실행 방법](docs/running.md) · [개발 당시 팀 문서](docs/team-readme.md)
 
-## 프로젝트 소개
+## 프로젝트 개요
 
-공간 데이터 파일을 업로드하고 지도에서 확인하며, 범위와 형식을 선택해 다운로드하는 웹 플랫폼입니다. React·Leaflet 기반 지도 화면을 FastAPI 백엔드와 연결합니다.
+| 항목 | 내용 |
+|---|---|
+| 개발 기간 | 2026.03~2026.05 |
+| 프로젝트 형태 | 학교 캡스톤 팀 프로젝트 |
+| 주요 기능 | 공간 데이터 업로드, 지도 시각화, 레이어 관리, 영역 선택, 변환·다운로드 요청 |
+| 프론트엔드 기술 | React, JavaScript, Leaflet, react-leaflet, react-dropzone, axios |
+| 배포 경험 | Vercel 프론트엔드와 AWS 기반 백엔드 연동 |
 
-## 역할 정리
+현재는 기존 AWS 환경에 접근할 수 없어 운영 데모를 제공하지 않습니다. 아래 내용은 코드와 개발 기록을 바탕으로 정리했습니다.
 
-당시 보고서에 기록한 본인 역할은 프로젝트 총괄 관리, DB 아키텍처 설계, PostGIS·JSONB 모델링, 프론트엔드·Leaflet 지도 UI 개발, AWS EC2·S3 인프라 구축, Vercel 배포 및 보고서 작성입니다.
+## 담당 역할
 
-현재 이력서에는 **공간 DB 설계, 프론트엔드 개발 및 AWS 인프라 구축·배포**로 요약했습니다. 이는 보고서와 본인의 역할 설명을 바탕으로 한 내용이며, Git 기록만으로 전체 담당 범위를 확정한 것은 아닙니다. 팀원도 UI와 백엔드 및 시각화 기능 개발에 참여했습니다.
+팀장으로서 프로젝트 진행과 보고서 작성을 맡았습니다. 당시 역할 정리에는 공간 DB 설계, PostGIS·JSONB 모델링, 프론트엔드와 지도 UI 개발, AWS EC2·S3 구축 및 Vercel 배포가 포함돼 있습니다.
 
-### 본인 계정 커밋에서 확인되는 변경 사항
+이 저장소에서는 프론트엔드 작업을 중심으로 소개합니다.
 
-- React·Leaflet 지도와 GeoJSON 표시 화면 구성
-- 파일 업로드 API 연동 및 진행률 표시, SHP ZIP 업로드 지원
-- 카테고리·포맷·지역 선택 및 다운로드 상태 UI
-- 레이어 선택·필터링, 속성 툴팁과 지도 영역 선택
-- 지도 이동·확대 시 현재 화면 영역 조회 API 연동
+- React·Leaflet 기반 지도 화면과 파일 업로드·다운로드 UI 구성
+- 지도 레이어와 사용자 선택 상태를 화면에 반영
+- 업로드, 공간 조회, 변환 작업 상태 확인 API 연동
+- Vercel 배포 설정과 백엔드 연결 작업
 
-위 목록은 커밋에 포함된 변경 사항이며 각 기능을 모두 단독 설계·구현했다는 의미는 아닙니다. 세부 기여는 팀원 작성 기록과 함께 확인해야 합니다.
+UI와 시각화 기능에는 팀원 기여도 포함돼 있습니다. 아래 구현 설명은 팀 결과물의 코드 흐름을 설명하며, 모든 기능을 단독 구현했다는 의미는 아닙니다. [역할과 기록의 범위](docs/publication-notes.md#역할과-기록의-범위)
 
-## 사용 기술
+## 주요 화면과 기능
 
-React, JavaScript, Leaflet, react-leaflet, react-dropzone, axios, Vercel
+| 화면 영역 | 사용자 기능 | 관련 코드 |
+|---|---|---|
+| 파일 업로드 | 파일을 드래그해 업로드하고 전송 진행률 확인 | [DropZone](src/components/Sidebar/DropZone.jsx), [Sidebar](src/components/Sidebar/Sidebar.jsx) |
+| 지도 | GeoJSON 표시, 속성 툴팁, 지도 이동·확대 | [MapView](src/components/Map/MapView.jsx) |
+| 레이어 패널 | 레이어 표시·숨김, 그룹 구성과 순서 관리 | [LayerPanel](src/components/Map/LayerPanel.jsx) |
+| 영역 선택 | 지도에서 사각형 범위를 지정해 다운로드 조건에 반영 | [MapView](src/components/Map/MapView.jsx) |
+| 다운로드 | 카테고리·파일 형식·지역을 선택하고 처리 상태 및 결과 링크 확인 | [Sidebar](src/components/Sidebar/Sidebar.jsx) |
 
-## 로컬 실행
+## 구현 흐름
 
-```bash
-npm ci
-cp .env.example .env.local
-npm start
+### 파일 업로드 후 지도에 표시
+
+파일을 `FormData`로 업로드 API에 전달합니다. 벡터 파일은 응답으로 받은 카테고리를 이용해 GeoJSON을 조회한 뒤 지도 레이어에 추가합니다. TIF는 별도 래스터 레이어로 등록하는 분기를 사용합니다.
+
+```mermaid
+sequenceDiagram
+    participant U as 사용자
+    participant F as React 화면
+    participant B as 백엔드 API
+    U->>F: 파일 선택
+    F->>B: POST /upload
+    B-->>F: 카테고리 반환
+    F->>B: GET /layers/{category}/geojson
+    B-->>F: GeoJSON 반환
+    F-->>U: 벡터 레이어 표시
 ```
 
-`.env.local`의 `REACT_APP_API_BASE_URL`을 준비한 백엔드 주소로 설정합니다. 기본값은 `http://localhost:8000`입니다. 업로드·조회·다운로드에는 실행 중인 백엔드와 DB·S3 설정이 필요합니다. 프론트엔드 환경변수는 브라우저에 공개되므로 비밀번호나 AWS 키를 넣지 않습니다.
+위 흐름은 벡터 파일 기준입니다. 파일 파싱·변환과 DB 저장은 백엔드가 담당합니다.
 
-```bash
-npm run build
-```
+### 지도 영역을 조회 조건으로 전달
 
-Vercel 배포는 이 사본에 자동으로 연결하지 않았습니다. 직접 배포할 경우 HTTPS 백엔드 주소를 환경변수로 지정하고 백엔드의 CORS 허용 출처를 맞춥니다. `/api` 프록시 방식이 필요하면 `vercel.example.json`의 예시 도메인을 실제 주소로 바꾼 후 `vercel.json`으로 저장하고 `REACT_APP_API_BASE_URL=/api`로 설정합니다.
+`MapView`는 지도 이동·확대가 끝나면 현재 화면의 경위도 범위를 구합니다. `LayerPanel`은 표시 중인 레이어와 범위를 `/spatial/search`에 전달합니다. 범위가 바뀐 뒤 500ms를 기다리고, 대기 중 다시 변경되면 이전 타이머를 취소하도록 구현돼 있습니다.
 
-## 공개용 보존·정리 범위
+### 변환 요청과 완료 상태 표시
 
-- 코드, UI 리소스, 기존 브랜치와 커밋 이력을 유지했습니다.
-- 과거 서버 IP와 배포 주소는 이력에서도 로컬·예시 주소로 치환했습니다.
-- 커밋 작성자의 개인 이메일은 GitHub 비공개용 주소로 치환했습니다. 작성자 이름과 작업 날짜는 유지했으며, 커밋 ID와 기존 서명 인증은 원본과 다릅니다.
-- GitHub PR·이슈·댓글은 이전하지 않았습니다.
-- `src/assets`의 기존 이미지는 화면 구성에 쓰인 리소스이며, 실제 서비스 실행 증빙으로 제시하지 않습니다.
+선택한 카테고리·파일 형식·지역·영역을 `/spatial/query`에 전달합니다. 응답의 작업 ID로 상태를 2초 간격으로 조회하고, 완료되면 다운로드 링크를 표시합니다. 상태가 완료 또는 실패이면 반복 조회를 중단합니다.
 
----
+## 구현 과정에서 보완한 점
 
-## 개발 당시 README
+### 파일명과 API 입력 규칙 맞추기
 
-아래는 원래 팀 문서를 보존한 기록입니다. 당시 완료 표시와 운영·배포 정보는 현재 실행 상태를 보장하지 않습니다. 주소는 공개용 예시로 치환되어 있습니다.
+파일명에서 확장자를 제거한 값을 카테고리로 사용할 때, 특수문자와 길이를 처리하는 코드가 추가됐습니다. 프론트엔드에서 허용하지 않는 문자를 `_`로 바꾸고 50자로 제한한 뒤 업로드합니다. [구현 코드](src/components/Sidebar/Sidebar.jsx)
 
-# p02-frontend
+### 전송 진행률과 변환 상태 구분하기
 
-환경 공간데이터 통합 관리 및 시각화 플랫폼 - 프론트엔드
+업로드는 axios의 전송 이벤트로 진행률을 표시합니다. 다운로드 준비 과정은 백엔드 작업 상태를 조회해 대기·처리·완료·실패로 표시합니다. 이때 다운로드 진행 바의 값은 상태에 대응한 표시값이며, 실제 변환 작업량을 측정한 퍼센트는 아닙니다. [구현 코드](src/components/Sidebar/Sidebar.jsx)
 
-## 기술 스택
-- React
-- Leaflet.js (지도 렌더링)
-- react-dropzone (파일 업로드)
-- axios (REST API 통신)
+두 항목은 커밋과 코드에서 확인되는 변경 내용입니다. 성능 향상 수치는 별도로 측정하지 않았습니다.
 
-## 로컬 실행 방법
-```bash
-npm install
-npm start
-```
+## 기술 구성
 
-## 브랜치 전략
-```
-main
-└── develop
-    ├── feature/map-view
-    ├── feature/file-upload
-    ├── feature/layer-control
-    ├── feature/filter-search
-    └── feature/progress-bar
-```
+| 용도 | 기술 |
+|---|---|
+| 화면과 상태 관리 | React, JavaScript |
+| 지도·도형 선택 | Leaflet, react-leaflet, leaflet-draw |
+| 파일 선택과 HTTP 요청 | react-dropzone, axios |
+| 레이어 순서 변경 | dnd-kit |
+| 배포 설정 | Vercel |
+| 연동 백엔드 | FastAPI, PostgreSQL·PostGIS, AWS S3 |
 
-### 브랜치 규칙
-| 브랜치 | 용도 |
-|--------|------|
-| `main` | 배포용 브랜치 (Vercel 자동 배포) |
-| `develop` | 개발 통합 브랜치 |
-| `feature/xxx` | 기능별 개발 브랜치 |
+## 실행 및 관련 자료
 
-## 개발 흐름
+- [로컬 실행과 배포 안내](docs/running.md)
+- [백엔드 코드와 DB·인프라 설명](https://github.com/km-jun/p02-backend-portfolio)
+- [개발 당시 팀 문서](docs/team-readme.md)
+- [개발 이력 보존과 공개용 정리 내역](docs/publication-notes.md)
 
-### 1. 최초 세팅 (처음 한 번만)
-```bash
-git clone https://github.com/km-jun/p02-frontend.git
-cd p02-frontend
-npm install
-```
-
-### 2. 작업 시작할 때마다
-```bash
-# develop 브랜치로 이동 후 최신 코드 pull
-git checkout develop
-git pull origin develop
-
-# 기능 브랜치 생성
-git checkout -b feature/기능명
-```
-
-### 3. 작업 완료 후
-```bash
-# 변경사항 저장
-git add .
-git commit -m "feat: 기능 설명"
-
-# 원격 저장소에 push
-git push origin feature/기능명
-```
-
-### 4. Pull Request (PR) 생성
-1. GitHub에서 `p02-frontend` 저장소 접속
-2. **"Compare & pull request"** 버튼 클릭
-3. base: `develop` ← compare: `feature/기능명` 확인
-4. 제목과 설명 작성 후 **"Create pull request"** 클릭
-5. 코드 리뷰 후 **"Merge pull request"** 클릭
-
-### 5. Merge 후 로컬 정리
-```bash
-git checkout develop
-git pull origin develop
-git branch -d feature/기능명
-```
-
-## 📋 현재 진행 상황 (2026.05.30)
-
-### ✅ 완료된 기능
-- [x] 기본 지도 렌더링 (Leaflet + OpenStreetMap)
-- [x] GeoJSON, CSV, SHP(ZIP) 파일 업로드 및 특수문자 처리
-- [x] 업로드 진행률 표시 및 백엔드 API 연동
-- [x] 대용량 벡터 데이터 렌더링 최적화 (Canvas 엔진 적용)
-- [x] TIF 래스터 파일 동적 히트맵 시각화 (hsla 투명도 적용)
-- [x] 레이어 렌더링 완료 상태를 감지하는 로딩 UI 연동
-- [x] Vercel 자동 배포
-
-### 🔧 백엔드 연동 정보
-**API 서버**: `http://127.0.0.1:8000`
-
-**주요 엔드포인트**:
-- `POST /upload` - 파일 업로드
-- `GET /layers` - 레이어 목록 조회 (속도 최적화 완료)
-- `GET /layers/{category}/geojson` - 벡터 레이어 데이터 조회
-- `GET /layers/{category}/raster` - TIF 래스터 이미지 S3 다운로드 URL 반환
-
-### ⚠️ 알려진 이슈
-**Vercel 배포에서 파일 업로드 불가**
-- **원인**: Mixed Content Error (HTTPS → HTTP 차단)
-- **해결**: 백엔드 HTTPS 설정 필요 (도메인 구매 후)
-- **현재**: localhost:3000에서는 정상 작동 ✅
-
-### 📅 다음 단계
-1. [ ] 도메인 구매 (학교 예산 신청 중)
-2. [ ] EC2 HTTPS 설정 (SSL 인증서)
-3. [ ] Vercel 완전 작동 확인
-4. [ ] 레이어 필터/검색 기능
-5. [ ] 속성 정보 팝업
-
-## 🚀 로컬 개발 (권장)
-현재는 localhost에서 테스트를 권장합니다:
-```bash
-npm start
-# 백엔드도 로컬 실행 시: Sidebar.jsx의 API_BASE를 localhost:8000으로 변경
-```
-
-## 🔗 관련 저장소
-- 백엔드: [km-jun/p02-backend-portfolio](https://github.com/km-jun/p02-backend-portfolio)
-
-## 배포
-https://example.com
+공개용 사본을 준비하면서 프론트엔드 빌드를 확인했습니다. 현재 백엔드와의 통합 실행은 재검증하지 않았습니다.
