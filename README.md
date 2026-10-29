@@ -8,9 +8,9 @@
 - **팀 구성:** 학생 4명, 멘토 1명
 - **백엔드:** [p02-backend-portfolio](https://github.com/km-jun/p02-backend-portfolio)
 
-## 사용 기술
+## 주요 사용 기술
 
-React, JavaScript, Leaflet, react-leaflet, leaflet-draw, react-dropzone, axios, dnd-kit, Vercel
+React, JavaScript, Leaflet · 배포: Vercel
 
 ## 주요 기능
 
