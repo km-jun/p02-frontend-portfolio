@@ -24,23 +24,22 @@ React, JavaScript, Leaflet · 배포: Vercel
 
 ## 로컬 실행
 
-Node.js와 npm이 필요합니다.
+Node.js와 npm이 필요합니다. 데이터 기능을 사용하려면 실행 중인 백엔드도 준비해야 합니다.
 
 ```bash
 git clone https://github.com/km-jun/p02-frontend-portfolio.git
 cd p02-frontend-portfolio
 npm ci
 cp .env.example .env.local
+```
+
+`.env.local`에서 백엔드 주소를 설정한 뒤 실행합니다.
+
+```bash
 npm start
 ```
 
-Windows에서는 `.env.example`을 복사해 `.env.local`로 저장해도 됩니다.
-
-`.env.local`의 `REACT_APP_API_BASE_URL`을 실행 중인 백엔드 주소로 설정하세요. 기본값은 `http://localhost:8000`입니다. 업로드·조회·다운로드 기능에는 백엔드와 DB·S3 환경이 필요합니다. 프론트엔드 환경변수에는 비밀번호나 AWS 키를 넣지 않습니다.
-
-```bash
-npm run build
-```
+환경변수·Windows 실행·빌드·배포 설정은 [실행·배포 상세 안내](docs/running.md)를 참고하세요.
 
 ## 현재 상태
 
